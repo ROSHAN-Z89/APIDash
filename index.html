@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APIDash — REST API Tester</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <span class="logo-text">API<span>Dash</span></span>
+    <span class="header-badge">v1.0</span>
+  </div>
+  <div class="header-right">
+    <div class="status-dot" title="Ready"></div>
+    <span style="font-size:11px;color:var(--text3)">READY</span>
+  </div>
+</header>
+
+<!-- ── QUICK EXAMPLES ──────────────────────────────────────────── -->
+<div class="quick-bar">
+  <span class="quick-label">EXAMPLES:</span>
+  <button class="quick-pill" onclick="loadExample('jsonplaceholder')">JSONPlaceholder</button>
+  <button class="quick-pill" onclick="loadExample('catfact')">Cat Facts</button>
+  <button class="quick-pill" onclick="loadExample('github')">GitHub API</button>
+  <button class="quick-pill" onclick="loadExample('weather')">Open-Meteo</button>
+  <button class="quick-pill" onclick="loadExample('httpbin-post')">HTTPBin POST</button>
+  <button class="quick-pill" onclick="loadExample('reqres')">ReqRes</button>
+</div>
+
+<!-- ── URL BAR ─────────────────────────────────────────────────── -->
+<div class="url-section">
+  <div class="url-bar">
+    <select class="method-select method-GET" id="method-select" onchange="updateMethodColor()">
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+      <option value="PUT">PUT</option>
+      <option value="PATCH">PATCH</option>
+      <option value="DELETE">DELETE</option>
+      <option value="HEAD">HEAD</option>
+      <option value="OPTIONS">OPTIONS</option>
+    </select>
+    <input
+      type="text"
+      class="url-input"
+      id="url-input"
+      placeholder="https://api.example.com/endpoint"
+      value="https://jsonplaceholder.typicode.com/posts/1"
+      onkeydown="if(event.key==='Enter') sendRequest()"
+    />
+    <button class="send-btn" id="send-btn" onclick="sendRequest()">▶ SEND</button>
+  </div>
+</div>
+
+<!-- ── APP WORKSPACE ───────────────────────────────────────────── -->
+<div class="app">
+  <div class="workspace">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel" id="left-panel">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('params', this)">Params</div>
+        <div class="tab" onclick="switchTab('headers', this)">Headers</div>
+        <div class="tab" onclick="switchTab('body', this)">Body</div>
+        <div class="tab" onclick="switchTab('auth', this)">Auth</div>
+      </div>
+
+      <!-- PARAMS TAB -->
+      <div class="tab-panel active" id="tab-params">
+        <div class="kv-table" id="params-table"></div>
+        <button class="add-row-btn" onclick="addRow('params')">+ ADD PARAM</button>
+      </div>
+
+      <!-- HEADERS TAB -->
+      <div class="tab-panel" id="tab-headers">
+        <div class="kv-table" id="headers-table"></div>
+        <button class="add-row-btn" onclick="addRow('headers')">+ ADD HEADER</button>
+      </div>
+
+      <!-- BODY TAB -->
+      <div class="tab-panel" id="tab-body">
+        <div class="body-editor">
+          <div class="body-toolbar">
+            <span class="body-type">TYPE:</span>
+            <button class="type-btn active" onclick="setBodyType('json', this)">JSON</button>
+            <button class="type-btn" onclick="setBodyType('text', this)">Text</button>
+            <button class="type-btn" onclick="setBodyType('form', this)">Form</button>
+            <button class="type-btn" style="margin-left:auto" onclick="formatBody()">Format</button>
+          </div>
+          <textarea
+            class="body-textarea"
+            id="body-textarea"
+            placeholder='{\n  "key": "value"\n}'
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- AUTH TAB -->
+      <div class="tab-panel" id="tab-auth">
+        <div class="auth-section">
+          <div class="field-group">
+            <label class="field-label">Auth Type</label>
+            <select class="auth-type-select" id="auth-type" onchange="updateAuthType()">
+              <option value="none">No Auth</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="basic">Basic Auth</option>
+              <option value="apikey">API Key</option>
+            </select>
+          </div>
+          <div id="auth-fields"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESIZER -->
+    <div class="resizer" id="resizer"></div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- RESPONSE META BAR -->
+      <div class="response-meta" id="response-meta">
+        <span class="meta-label">STATUS</span>
+        <span class="status-badge status-none" id="status-badge">—</span>
+        <span class="meta-separator">|</span>
+        <div class="meta-item" id="time-meta" style="display:none">
+          <span class="meta-label">TIME</span>
+          <span id="time-display">—</span>
+        </div>
+        <div class="meta-item" id="size-meta" style="display:none">
+          <span class="meta-label">SIZE</span>
+          <span id="size-display">—</span>
+        </div>
+      </div>
+
+      <!-- RESPONSE VIEW TABS -->
+      <div class="response-tabs">
+        <div class="resp-tab active" onclick="switchRespTab('pretty', this)">Pretty</div>
+        <div class="resp-tab" onclick="switchRespTab('raw', this)">Raw</div>
+        <div class="resp-tab" onclick="switchRespTab('resp-headers', this)">Headers</div>
+        <button class="copy-btn" onclick="copyResponse()">⎘ Copy</button>
+      </div>
+
+      <!-- RESPONSE BODY -->
+      <div class="response-body" id="response-body">
+
+        <!-- EMPTY STATE -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">📡</div>
+          <div class="empty-title">No Response Yet</div>
+          <div class="empty-sub">Hit SEND to fire a request</div>
+        </div>
+
+        <!-- PRETTY PANEL -->
+        <div class="resp-panel" id="panel-pretty">
+          <div class="line-numbered">
+            <div class="line-nums" id="line-nums"></div>
+            <div class="line-content" id="json-viewer"></div>
+          </div>
+        </div>
+
+        <!-- RAW PANEL -->
+        <div class="resp-panel" id="panel-raw">
+          <div id="raw-viewer"></div>
+        </div>
+
+        <!-- RESPONSE HEADERS PANEL -->
+        <div class="resp-panel" id="panel-resp-headers">
+          <div id="headers-viewer"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div class="history-panel" id="history-panel">
+      <div class="history-header">
+        <span class="history-title">History</span>
+        <button class="clear-btn" onclick="clearHistory()">CLEAR</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">No requests yet.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
