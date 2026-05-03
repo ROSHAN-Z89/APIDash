@@ -58,3 +58,19 @@ APIDash is designed to streamline API development and testing workflows. It offe
 ---
 
 ## Project Structure
+APIDash/
+│
+├── index.html # Main UI structure
+├── style.css # Styling and layout (dark theme)
+└── app.js # Core application logic
+
+
+
+---
+
+## Installation and Usage
+
+1. Clone or download the repository:
+   ```bash
+   git clone [<repository-url>](https://github.com/ROSHAN-Z89/APIDash)
+   cd APIDash
